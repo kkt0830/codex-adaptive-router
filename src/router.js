@@ -3,6 +3,10 @@ const patterns = {
     /\b(typo|spelling|readme|documentation|docs?|copy|label|button text|rename text)\b/i,
     /(오타|문구|버튼\s*텍스트|문서|읽어보기|맞춤법)/
   ],
+  readSynthesis: [
+    /\b(read|summari[sz]e|review|explain|analy[sz]e|inspect)\b/i,
+    /(읽|요약|분석|검토|살펴|설명)/
+  ],
   source: [
     /\b(api|endpoint|feature|implement|integration|refactor|tests?|backend|frontend)\b/i,
     /(기능|구현|연동|리팩터|테스트|엔드포인트)/
@@ -33,6 +37,7 @@ export function analyze(task) {
   if (typeof task !== 'string' || !task.trim()) throw new Error('Task text is required.');
   const text = task.trim();
   const trivial = matches(text, 'trivial');
+  const readSynthesis = trivial && matches(text, 'readSynthesis');
   const source = matches(text, 'source');
   const advanced = matches(text, 'advanced');
   const risk = matches(text, 'risk');
@@ -40,6 +45,7 @@ export function analyze(task) {
   const uncertainty = matches(text, 'uncertainty');
   const signals = [];
   if (trivial) signals.push('clear, narrow text or documentation change');
+  if (readSynthesis) signals.push('requires reading and synthesizing a file');
   if (source) signals.push('source implementation or verification requested');
   if (risk) signals.push('sensitive subsystem or compatibility constraint');
   if (scope) signals.push('broad project context');
@@ -49,12 +55,12 @@ export function analyze(task) {
   // Gates protect quality; a broad file count alone never selects advanced.
   let tier = 'standard';
   if (advanced && (uncertainty || risk || scope)) tier = 'advanced';
-  else if (trivial && !source && !risk && !scope && !uncertainty && !advanced) tier = 'light';
+  else if (trivial && !readSynthesis && !source && !risk && !scope && !uncertainty && !advanced) tier = 'light';
 
   const dimensions = {
-    complexity: advanced ? 4 : source ? (scope ? 3 : 2) : trivial ? 0 : 1,
-    context: scope ? 3 : risk ? 2 : source ? 1 : 0,
-    reasoning: advanced ? 4 : uncertainty ? 3 : source ? 2 : 0,
+    complexity: advanced ? 4 : source ? (scope ? 3 : 2) : readSynthesis ? 1 : trivial ? 0 : 1,
+    context: scope ? 3 : risk ? 2 : source || readSynthesis ? 1 : 0,
+    reasoning: advanced ? 4 : uncertainty ? 3 : source ? 2 : readSynthesis ? 1 : 0,
     risk: risk ? (advanced ? 4 : 3) : source ? 2 : 0,
     ambiguity: uncertainty ? (advanced ? 4 : 3) : advanced ? 2 : 0
   };

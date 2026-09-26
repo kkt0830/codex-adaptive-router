@@ -3,6 +3,17 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 
+export function detectsIncompleteAnswer(message) {
+  if (!message) return false;
+  return [
+    /(?:cannot|can't|unable to|no access to).{0,100}(?:read|access|file|repository|repo|tool)/i,
+    /(?:no|without).{0,50}(?:file|shell|command).{0,30}tool.{0,30}(?:available|provided)/i,
+    /(?:파일|문서|저장소).{0,60}(?:읽|접근|확인).{0,60}(?:못|어렵|불가|없)/,
+    /(?:읽기|접근|확인).{0,40}도구.{0,60}(?:없|제공되지|사용할 수 없)/,
+    /내용을 (?:붙여|보내) (?:주시면|주세요)/
+  ].some(pattern => pattern.test(message));
+}
+
 export function appendLog(baseDir, config, entry) {
   const target = path.resolve(baseDir, config.logging?.path || 'logs/runs.jsonl');
   fs.mkdirSync(path.dirname(target), { recursive: true });
@@ -53,9 +64,9 @@ export async function execute(choice, { cwd, codex = 'codex', sandbox = 'workspa
     child.stderr.setEncoding('utf8');
     child.stderr.on('data', chunk => { stderr = (stderr + chunk).slice(-8000); });
     child.on('close', code => resolve({
-      success: code === 0 && !failure, exitCode: code, threadId,
+      success: code === 0 && !failure && !detectsIncompleteAnswer(finalMessage), exitCode: code, threadId,
       durationMs: Date.now() - started, usage, finalMessage,
-      error: failure || (code === 0 ? null : stderr.trim() || `Codex exited ${code}`)
+      error: failure || (detectsIncompleteAnswer(finalMessage) ? 'Agent reported inability to complete the task.' : code === 0 ? null : stderr.trim() || `Codex exited ${code}`)
     }));
   });
 }
