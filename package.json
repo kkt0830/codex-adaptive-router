@@ -1,0 +1,9 @@
+{
+  "name": "codex-adaptive-router",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": { "adaptive-router": "./src/cli.js" },
+  "scripts": { "test": "node --test" },
+  "engines": { "node": ">=20" }
+}

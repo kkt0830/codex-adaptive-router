@@ -1,0 +1,13 @@
+{
+  "models": {
+    "light": { "model": "gpt-6-luna", "reasoning": "low" },
+    "standard": { "model": "gpt-6-sol", "reasoning": "medium" },
+    "advanced": { "model": "gpt-6-astra", "reasoning": "high" }
+  },
+  "routing": {
+    "highRiskMinimumTier": "standard",
+    "decomposition": false,
+    "escalation": false
+  },
+  "logging": { "path": "logs/runs.jsonl" }
+}
