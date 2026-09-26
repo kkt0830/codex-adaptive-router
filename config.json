@@ -7,7 +7,7 @@
   "routing": {
     "highRiskMinimumTier": "standard",
     "decomposition": false,
-    "escalation": false
+    "escalation": true
   },
   "logging": { "path": "logs/runs.jsonl" }
 }

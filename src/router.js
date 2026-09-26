@@ -83,6 +83,6 @@ export function select(task, config, options = {}) {
     task, analysis, tier, model: options.model || choice.model,
     reasoning: options.reasoning || choice.reasoning,
     override: Boolean((options.tier && options.tier !== 'auto') || options.model || options.reasoning),
-    escalationExpected: tier === 'advanced' ? 'already at highest tier' : analysis.dimensions.ambiguity >= 3 ? 'possible after validation' : 'not expected'
+    escalationExpected: tier === 'advanced' ? 'already at highest tier' : tiers.indexOf(tier) < tiers.indexOf(analysis.classification) ? 'possible after lower-tier override' : analysis.dimensions.ambiguity >= 3 ? 'possible after validation' : 'not expected'
   };
 }

@@ -43,6 +43,13 @@ test('override selects a tier and exact configured model', () => {
   assert.equal(result.override, true);
 });
 
+test('lower-tier override explains possible escalation', () => {
+  const result = select('README의 내용을 요약해줘.', config, { tier: 'light' });
+  assert.equal(result.analysis.classification, 'standard');
+  assert.equal(result.tier, 'light');
+  assert.match(result.escalationExpected, /lower-tier override/);
+});
+
 test('empty tasks are rejected', () => {
   assert.throws(() => analyze('  '), /required/);
 });
