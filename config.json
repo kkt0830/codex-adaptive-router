@@ -9,5 +9,22 @@
     "decomposition": false,
     "escalation": true
   },
+  "recovery": {
+    "maxRetriesPerTier": 1,
+    "maxEscalations": 2,
+    "maxTotalAttempts": 4,
+    "escalationConfidence": 0.75,
+    "strategies": {
+      "CODE_ERROR": "RETRY_SAME_MODEL",
+      "CONTEXT_INSUFFICIENT": "EXPAND_CONTEXT",
+      "REASONING_INSUFFICIENT": "ESCALATE",
+      "ENVIRONMENT_ERROR": "STOP",
+      "DEPENDENCY_ERROR": "STOP",
+      "PERMISSION_ERROR": "STOP",
+      "TEST_FAILURE": "RETRY_SAME_MODEL",
+      "ARCHITECTURE_PROBLEM": "ESCALATE",
+      "UNKNOWN": "RETRY_SAME_MODEL"
+    }
+  },
   "logging": { "path": "logs/runs.jsonl" }
 }

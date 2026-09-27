@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
+import { recoveryLimits } from './recovery.js';
 
 export function loadConfig(file) {
   const full = path.resolve(file);
@@ -10,6 +11,7 @@ export function loadConfig(file) {
       throw new Error(`config: models.${tier} needs model and reasoning`);
     }
   }
+  recoveryLimits(config);
   return { config, baseDir: path.dirname(full) };
 }
 

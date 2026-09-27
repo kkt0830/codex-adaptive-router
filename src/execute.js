@@ -37,9 +37,10 @@ export async function execute(choice, { cwd, codex = 'codex', sandbox = 'workspa
     let finalMessage = '';
     let threadId = null;
     let failure = null;
+    const commands = [];
     child.on('error', error => resolve({
       success: false, exitCode: null, threadId: null,
-      durationMs: Date.now() - started, usage: null, finalMessage: '', error: error.message
+      durationMs: Date.now() - started, usage: null, finalMessage: '', error: error.message, commands: [], stderr: '', turnFailed: true
     }));
     child.stdin.on('error', () => {});
     child.stdin.end(prompt);
@@ -58,6 +59,10 @@ export async function execute(choice, { cwd, codex = 'codex', sandbox = 'workspa
           if (event.type === 'turn.completed' && event.usage) usage = event.usage;
           if (event.type === 'turn.failed') failure = typeof event.error === 'string' ? event.error : JSON.stringify(event.error || 'turn failed');
           if (event.type === 'item.completed' && event.item?.type === 'agent_message') finalMessage = event.item.text || finalMessage;
+          if (event.type === 'item.completed' && event.item?.type === 'command_execution') {
+            commands.push({ command: String(event.item.command || '').slice(0, 500), exitCode: Number.isInteger(event.item.exit_code) ? event.item.exit_code : null, output: String(event.item.aggregated_output || '').slice(-1600) });
+            if (commands.length > 20) commands.shift();
+          }
         } catch { /* Ignore non-JSON diagnostics, never invent usage. */ }
       }
     });
@@ -65,7 +70,7 @@ export async function execute(choice, { cwd, codex = 'codex', sandbox = 'workspa
     child.stderr.on('data', chunk => { stderr = (stderr + chunk).slice(-8000); });
     child.on('close', code => resolve({
       success: code === 0 && !failure && !detectsIncompleteAnswer(finalMessage), exitCode: code, threadId,
-      durationMs: Date.now() - started, usage, finalMessage,
+      durationMs: Date.now() - started, usage, finalMessage, commands, stderr: stderr.trim(), turnFailed: Boolean(failure),
       error: failure || (detectsIncompleteAnswer(finalMessage) ? 'Agent reported inability to complete the task.' : code === 0 ? null : stderr.trim() || `Codex exited ${code}`)
     }));
   });
