@@ -18,6 +18,8 @@ node src/cli.js run --interactive --cwd C:\path\to\repository "로그인 문제�
 
 `run`은 새 Codex 세션을 시작하며 기본 sandbox는 `workspace-write`입니다. 읽기만 시킬 때는 `--sandbox read-only`를 지정합니다. 실행 결과는 `logs/runs.jsonl`에 JSONL로 기록합니다. `--model`과 `--reasoning`은 직접 지정할 수 있고, 모델 ID와 effort는 로컬 Codex 모델 캐시가 있을 때 검사합니다. 캐시 부재나 서버 측 권한 변경은 실행 시 Codex가 최종 판단합니다. `dry-run`은 모델을 호출하지 않으며 `--simulate-failure TEXT`로 실패 분류·복구 정책만 미리 볼 수 있습니다.
 
+Windows에서 npm으로 설치한 Codex는 `codex.ps1`/`codex.cmd`를 제공할 수 있습니다. Router는 PATH의 npm `.cmd` 진입점을 찾아 Node.js로 직접 실행하며, `.exe`도 그대로 실행합니다. 셸을 거치지 않으므로 요청·모델 설정이 명령 문자열로 해석되지 않습니다. PATH에 여러 Codex 설치본이 있거나 자동 탐색이 실패하면 `run --codex "C:\path\to\codex.cmd"` 또는 `.exe` 경로를 지정할 수 있습니다. PowerShell에서는 `cd /d` 대신 `Set-Location -LiteralPath '저장소 경로'`를 사용합니다. `spawn codex ENOENT`가 나왔다면 이 버전으로 업데이트한 뒤 다시 실행하세요.
+
 터미널에서 `run --interactive`를 쓰면 작업 중 `/switch light`, `/switch standard`, `/switch advanced`를 입력할 수 있습니다. Router가 실행을 중단하고 제안 모델·effort를 보여주며 `y` 승인을 요청합니다. **수동 전환**을 승인하면 기존 세션 ID로 `codex exec resume`합니다. 거절하면 기존 모델로 재개합니다. **실패에 따른 자동 승격 제안**은 승인 후 새 Codex 세션을 시작하고 압축된 진단 정보를 넘깁니다. 거절하면 미완료로 종료합니다. `s`는 중단 상태로 남기며 `/stop`은 즉시 종료합니다. 이는 **터미널 승인 UI**이며 Codex Desktop 내부 팝업은 아닙니다. 비대화형 `run`은 동일 모델 재시도까지 자동 수행하지만, 모델 승격이 필요하면 제안만 기록하고 멈춥니다. 중단은 실행 상태를 메모리에서 정지했다가 복원하는 기능이 아닙니다.
 
 ## 조사 결과
