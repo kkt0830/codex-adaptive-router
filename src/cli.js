@@ -9,6 +9,7 @@ import { validateResult, classifyFailure, decideRecovery } from './recovery.js';
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const help = `Usage: node src/cli.js <dry-run|explain|run> [options] "task"
 Options: --config FILE --tier auto|light|standard|advanced --model ID --reasoning LEVEL --cwd DIR --json
+run also accepts --codex FILE to choose a Codex CLI executable or npm .cmd shim.
 dry-run/explain also accept --simulate-failure TEXT to preview classification and recovery without execution.
 run also accepts --sandbox read-only|workspace-write (default: workspace-write).
 Use run --interactive in a terminal to interrupt with /switch TIER, approve the change, and resume the same session.
@@ -19,7 +20,7 @@ function parse(argv) {
   if (!['dry-run', 'explain', 'run'].includes(command)) throw new Error(help);
   const opts = {};
   const task = [];
-  const known = new Set(['config', 'tier', 'model', 'reasoning', 'cwd', 'sandbox', 'simulate-failure']);
+  const known = new Set(['config', 'tier', 'model', 'reasoning', 'cwd', 'sandbox', 'simulate-failure', 'codex']);
   for (let i = 0; i < rest.length; i++) {
     const value = rest[i];
     if (value === '--json') opts.json = true;
@@ -64,7 +65,7 @@ export async function main(argv) {
   }
   printChoice(choice, warning, opts.json, simulation);
   if (command === 'dry-run' || command === 'explain') return 0;
-  const result = await supervise(choice, { config, baseDir, cwd: opts.cwd, sandbox: opts.sandbox, interactive: Boolean(opts.interactive), output: opts.json ? { write() {} } : process.stdout });
+  const result = await supervise(choice, { config, baseDir, cwd: opts.cwd, sandbox: opts.sandbox, codex: opts.codex, interactive: Boolean(opts.interactive), output: opts.json ? { write() {} } : process.stdout });
   if (!opts.json) {
     if (result.finalMessage) console.log(`\n${result.finalMessage}`);
   } else console.log(JSON.stringify({ execution: result, logPath: result.logPath }, null, 2));

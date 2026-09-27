@@ -2,6 +2,7 @@ import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
+import { resolveCodexCommand } from './codex-command.js';
 
 export function detectsIncompleteAnswer(message) {
   if (!message) return false;
@@ -29,7 +30,13 @@ export async function execute(choice, { cwd, codex = 'codex', sandbox = 'workspa
   return new Promise((resolve, reject) => {
     const home = os.homedir();
     const env = { ...process.env, HOME: process.env.HOME || home, CODEX_HOME: process.env.CODEX_HOME || path.join(home, '.codex') };
-    const child = spawn(codex, args, { cwd: cwd || process.cwd(), env, shell: false, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
+    let invocation;
+    try { invocation = resolveCodexCommand(codex, { env, cwd: cwd || process.cwd() }); }
+    catch (error) {
+      resolve({ success: false, exitCode: null, threadId: null, durationMs: Date.now() - started, usage: null, finalMessage: '', error: error.message, commands: [], stderr: '', turnFailed: true });
+      return;
+    }
+    const child = spawn(invocation.command, [...invocation.argsPrefix, ...args], { cwd: cwd || process.cwd(), env, shell: false, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
     onChild?.(child);
     let buffer = '';
     let stderr = '';
